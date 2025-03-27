@@ -2,13 +2,11 @@ library(readr)
 library(biomaRt)
 library(dplyr)
 library(edgeR)
-library(pheatmap)
 
 # read in the list of bivalent mice genes
-bivalent_mice_genes <- read_csv('/Users/sophiemarcotte/Desktop/bivalent_regen_genes.csv')
-
+bivalent_mice_genes <- read_csv('/Users/sm2949/Desktop/bivalent_regen_genes.csv')
 # read in the conversion file
-conversion <- read_tsv('/Users/sophiemarcotte/Desktop/mart_export.txt')
+conversion <- read_tsv('/Users/sm2949/Desktop/mart_export.txt')
 
 # join the tables together to map orthologs
 bivalent_orthologs <- left_join(bivalent_mice_genes, conversion, by = c("x" = "Gene stable ID"))
@@ -150,3 +148,54 @@ apap24_significant <- apap24[apap24$PValue < 0.05, ]
 # split to up and down reg at each timepoint
 up.apap12 <- apap12_significant[apap12_significant$logFC > 1, ]
 up.apap24 <- apap24_significant[apap24_significant$logFC > 1, ]
+
+# ---------------------------------- PHx injury model ----------------------------------#
+phx_counts <- read_tsv('/Users/sm2949/Desktop/fragmentCounts.txt', skip = 1)
+# fix the col names 
+colnames(phx_counts) <- gsub("^.*/(.*)\\.sorted\\.bam$", "\\1", colnames(phx_counts))
+# only select relevant columns 
+phx_counts <- phx_counts[,c(1,7:24)]
+# set the gene names as the col names
+phx_counts <- as.data.frame(phx_counts)
+rownames(phx_counts) <- phx_counts[,1]  
+phx_counts <- phx_counts[,-1]
+
+# create the metadata
+phx_samples <- colnames(phx_counts)
+groups_phx <- as.factor(c(ifelse(grepl("120", phx_samples), "120hr",
+                         ifelse(grepl("168", phx_samples), "168hr",
+                         ifelse(grepl("24", phx_samples), "24hr",
+                         ifelse(grepl("6hr", phx_samples), "6hr",
+                         ifelse(grepl("72", phx_samples), "72hr", 
+                         ifelse(grepl("sham", phx_samples), "Control", "Unknown"))))))))
+
+
+# create the DGElist object
+y <- DGEList(counts=phx_counts, group=groups_phx)
+# filter out low expressed genes
+keep <- filterByExpr(y)
+y <- y[keep, , keep.lib.sizes=FALSE]
+# create the design model
+design <- model.matrix(~0+groups_phx)
+# normalize the data
+y <- calcNormFactors(y)
+# estimate dispersion
+y <- estimateDisp(y, design)
+colnames(design) <- levels(groups_phx)
+# fit the model
+fit <- glmQLFit(y, design, robust=TRUE)
+
+# fit test
+qlf_timepoint120 <- glmQLFTest(fit, contrast = c(1, 0, 0, 0, 0, -1))
+qlf_timepoint168 <- glmQLFTest(fit, contrast = c(0, 1, 0, 0, 0, -1))
+qlf_timepoint24 <- glmQLFTest(fit, contrast = c(0, 0, 1, 0, 0, -1))
+qlf_timepoint6 <- glmQLFTest(fit, contrast = c(0, 0, 0, 1, 0, -1))
+qlf_timepoint72 <- glmQLFTest(fit, contrast = c(0, 0, 0, 0, 1, -1))
+
+# save results as a dataframe
+phx6 <- as.data.frame(qlf_timepoint6)
+phx24 <- as.data.frame(qlf_timepoint24)
+phx72 <- as.data.frame(qlf_timepoint72)
+phx120 <- as.data.frame(qlf_timepoint120)
+phx168 <- as.data.frame(qlf_timepoint168)
+
