@@ -103,9 +103,6 @@ sig_dcpi3 <- left_join(dcpi3_significant, bivalent_cryo,
 apap_counts <- read_tsv('/Users/sophiemarcotte/Desktop/GSE230829_RNAseq_counts_raw.txt')
 apap_filtered <- apap_counts[,c(1, 18:33)]
 
-# inner join with the bivalent genes
-bivalent_apap <- inner_join(apap_filtered, bivalent_orthologs, by = c("...1" = "Zebrafish gene stable ID"))
-
 apap_samples <- c("WA-12-1_S29","WA-12-2_S30","WA-12-3_S31","WA-12-4_S32","WA-24-1_S45",
                   "WA-24-2_S46","WA-24-3_S47","WA-24-4_S48","WD-12-1_S25","WD-12-2_S26",
                   "WD-12-3_S27","WD-12-4_S28","WD-24-1_S41","WD-24-2_S42","WD-24-3_S43","WD-24-4_S44")
@@ -116,7 +113,7 @@ groups_apap <- as.factor(c(ifelse(grepl("WA-12", apap_samples), "APAP-12",
                            ifelse(grepl("WD-24", apap_samples), "Control-24", "Unknown"))))))
 
 # create count matrix
-countData_apap <- bivalent_apap[,c(1:17)]
+countData_apap <-apap_filtered[,c(1:17)]
 countData_apap <- countData_apap %>% distinct(...1, .keep_all = TRUE)
 countData_apap <- as.data.frame(countData_apap)
 rownames(countData_apap) <- countData_apap[,1]  
@@ -124,6 +121,10 @@ countData_apap <- countData_apap[,-1]
 
 # create the DGElist object
 y <- DGEList(counts=countData_apap, group=groups_apap)
+# filter out low expressed genes
+keep <- filterByExpr(y)
+y <- y[keep, , keep.lib.sizes=FALSE]
+# create the design matrix
 design <- model.matrix(~0+groups_apap)
 # normalize the data
 y <- calcNormFactors(y)
@@ -149,8 +150,12 @@ apap24_significant <- apap24[apap24$PValue < 0.05, ]
 up.apap12 <- apap12_significant[apap12_significant$logFC > 1, ]
 up.apap24 <- apap24_significant[apap24_significant$logFC > 1, ]
 
+# filter for only bivalent genes
+up.apap12 <- up.apap12[rownames(up.apap12) %in% zebrafish_bivalent, ]
+up.apap24 <- up.apap24[rownames(up.apap24) %in% zebrafish_bivalent, ]
+
 # ---------------------------------- PHx injury model ----------------------------------#
-phx_counts <- read_tsv('/Users/sm2949/Desktop/fragmentCounts.txt', skip = 1)
+phx_counts <- read_tsv('/Users/sophiemarcotte/Desktop/fragmentCounts.txt', skip = 1)
 # fix the col names 
 colnames(phx_counts) <- gsub("^.*/(.*)\\.sorted\\.bam$", "\\1", colnames(phx_counts))
 # only select relevant columns 
@@ -199,3 +204,16 @@ phx72 <- as.data.frame(qlf_timepoint72)
 phx120 <- as.data.frame(qlf_timepoint120)
 phx168 <- as.data.frame(qlf_timepoint168)
 
+# define the filtering function
+filter_significant_genes <- function(df, gene_list) {
+  df <- df[df$PValue < 0.05 & df$logFC > 1, ]  # filter for significance and logFC
+  df <- df[rownames(df) %in% gene_list, ]  # only bivalent genes
+  return(df)
+}
+
+# apply the function to each dataset
+phx6_filtered <- filter_significant_genes(phx6, zebrafish_bivalent)
+phx24_filtered <- filter_significant_genes(phx24, zebrafish_bivalent)
+phx72_filtered <- filter_significant_genes(phx72, zebrafish_bivalent)
+phx120_filtered <- filter_significant_genes(phx120, zebrafish_bivalent)
+phx168_filtered <- filter_significant_genes(phx168, zebrafish_bivalent)
