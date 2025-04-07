@@ -4,6 +4,8 @@ library(TxDb.Mmusculus.UCSC.mm10.knownGene)
 library(org.Mm.eg.db)
 library(dplyr)
 library(tidyverse)
+library(genomation)
+library(gUtils)
 
 # load the TxDb object for mouse
 txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
@@ -13,27 +15,27 @@ col_names <- c("chr", "start", "end", "ChIP_island_read_count", "CONTROL_island_
 
 # read in the broad peak files for each timepoint of H3K27me3
 hr0_broadpeak <- read_delim(
-  '/PHShome/sm2949/bash-chipseq-timecourse/0hr_WT_K27_S26_mdup_Addchr-W1000-G4000-islands-summary.txt',
+  '/Users/sophiemarcotte/Desktop/0hr_WT_K27_S26_mdup_Addchr-W1000-G4000-islands-summary.txt',
   delim = "\t", 
   col_names = col_names,
   trim_ws = TRUE
 )
 hr30_broadpeak <- read_delim(
-  '/PHShome/sm2949/bash-chipseq-timecourse/GSM3753290_WT-K27_30h_S2_chr-W1000-G4000-islands-summary.txt',
+  '/Users/sophiemarcotte/Desktop/GSM3753290_WT-K27_30h_S2_chr-W1000-G4000-islands-summary.txt',
   delim = "\t", 
   col_names = col_names,
   trim_ws = TRUE
 ) 
 
 hr40_broadpeak <- read_delim(
-  '/PHShome/sm2949/bash-chipseq-timecourse/GSM3753291_WT-K27_40h_S3_chr-W1000-G4000-islands-summary.txt',
+  '/Users/sophiemarcotte/Desktop/GSM3753291_WT-K27_40h_S3_chr-W1000-G4000-islands-summary.txt',
   delim = "\t", 
   col_names = col_names,
   trim_ws = TRUE
 ) 
 
 hr96_broadpeak <- read_delim(
-  '/PHShome/sm2949/bash-chipseq-timecourse/GSM3753292_WT-K27_96h_S4_chr-W1000-G4000-islands-summary.txt',
+  '/Users/sophiemarcotte/Desktop/GSM3753292_WT-K27_96h_S4_chr-W1000-G4000-islands-summary.txt',
   delim = "\t", 
   col_names = col_names,
   trim_ws = TRUE
@@ -89,7 +91,7 @@ hr96 <- GRanges(
 )
 
 # read in the H3K4me3 peaks
-H3K4me3_peaks = readNarrowPeak('/PHShome/sm2949/bash-chipseq-timecourse/GSM3561048_Sample_WTB-H3K4me3_peaks.narrowPeak')
+H3K4me3_peaks = readNarrowPeak('/Users/sophiemarcotte/Desktop/GSM3561048_Sample_WTB-H3K4me3_peaks.narrowPeak')
 # rename the chromosomes
 H3K4me3_peaks <- gr.chr(H3K4me3_peaks)
 
@@ -100,7 +102,7 @@ hr0_bivalent_overlap <- H3K4me3_peaks[subjectHits(hr0_bivalent_overlapping)]
 
 # annotate the peaks again
 hr0_bivalent_annotation <- annotatePeak(
-  hr0_bivalent_overlaps,
+  hr0_bivalent_overlap,
   tssRegion = c(-5000, 5000),
   TxDb = txdb,
   assignGenomicAnnotation = TRUE,
@@ -116,7 +118,7 @@ hr30_bivalent_overlap <- H3K4me3_peaks[subjectHits(hr30_bivalent_overlapping)]
 
 # annotate the peaks again
 hr30_bivalent_annotation <- annotatePeak(
-  hr30_bivalent_overlaps,
+  hr30_bivalent_overlap,
   tssRegion = c(-5000, 5000),
   TxDb = txdb,
   assignGenomicAnnotation = TRUE,
@@ -132,7 +134,7 @@ hr40_bivalent_overlap <- H3K4me3_peaks[subjectHits(hr40_bivalent_overlapping)]
 
 # annotate the peaks again
 hr40_bivalent_annotation <- annotatePeak(
-  hr40_bivalent_overlaps,
+  hr40_bivalent_overlap,
   tssRegion = c(-5000, 5000),
   TxDb = txdb,
   assignGenomicAnnotation = TRUE,
@@ -148,7 +150,7 @@ hr96_bivalent_overlap <- H3K4me3_peaks[subjectHits(hr96_bivalent_overlapping)]
 
 # annotate the peaks again
 hr96_bivalent_annotation <- annotatePeak(
-  hr96_bivalent_overlaps,
+  hr96_bivalent_overlap,
   tssRegion = c(-5000, 5000),
   TxDb = txdb,
   assignGenomicAnnotation = TRUE,
@@ -165,6 +167,12 @@ genes_hr30 <- unique(hr30_bivalent_df$ENSEMBL)
 genes_hr40 <- unique(hr40_bivalent_df$ENSEMBL)
 genes_hr96 <- unique(hr96_bivalent_df$ENSEMBL)
 
+# get ALL bivalent genes in one list
+all_genes <- unique(c(genes_hr0, genes_hr30, genes_hr40, genes_hr96))
+# save to CSV
+write.csv(data.frame(ENSEMBL = all_genes), "/Users/sophiemarcotte/Desktop/unique_ensembl_bivalent.csv", row.names = FALSE)
+
+# to only find those losing the methyl mark
 # find genes present in hr0 but NOT in hr30
 lost_hr30 <- setdiff(genes_hr0, genes_hr30)
 
