@@ -3,11 +3,13 @@ library(biomaRt)
 library(dplyr)
 library(edgeR)
 library(readxl)
+library(tibble)
+
 
 # read in the list of bivalent mice genes
-bivalent_mice_genes <- read_csv('/Users/sophiemarcotte/Desktop/unique_ensembl_bivalent.csv')
+bivalent_mice_genes <- read_csv('/Users/sm2949/Desktop/unique_ensembl_bivalent.csv')
 # read in the conversion file
-conversion <- read_tsv('/Users/sophiemarcotte/Desktop/mart_export.txt')
+conversion <- read_tsv('/Users/sm2949/Desktop/mart_export.txt')
 
 # join the tables together to map orthologs
 bivalent_orthologs <- left_join(bivalent_mice_genes, conversion, by = c("ENSEMBL" = "Gene stable ID"))
@@ -298,7 +300,7 @@ heart48_filtered <- filter_significant_genes(heart48, zebrafish_bivalent)
 writeLines(rownames(heart21_filtered), "/Users/sophiemarcotte/Desktop/gene_ids.txt")
 
 # ---------------------------------- caudal fin injury model ----------------------------------#
-fin_counts <- read_excel("/Users/sophiemarcotte/Desktop/GSE112498_counts_raw_pnauroy.xlsx")
+fin_counts <- read_excel("/Users/sm2949/Desktop/GSE112498_counts_raw_pnauroy.xlsx")
 
 # set the gene names as the col names
 fin_countData <- as.data.frame(fin_counts)
@@ -338,3 +340,203 @@ fin2 <- as.data.frame(qlf_timepoint2)
 fin3 <- as.data.frame(qlf_timepoint3)
 fin10 <- as.data.frame(qlf_timepoint10)
 
+# define the filtering function
+filter_significant_genes <- function(df, gene_list) {
+  df <- df[df$PValue < 0.05 & df$logFC < 1, ]  # filter for significance and logFC, change based on pos or neg
+  df <- df[rownames(df) %in% gene_list, ]  # only bivalent genes
+  return(df)
+}
+
+# apply the function to each dataset
+fin2_filtered <- filter_significant_genes(fin2, zebrafish_bivalent)
+fin3_filtered <- filter_significant_genes(fin3, zebrafish_bivalent)
+fin10_filtered <- filter_significant_genes(fin10, zebrafish_bivalent)
+
+# ---------------------------------- retina injury model ----------------------------------#
+retina24 <- read_excel('/Users/sm2949/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo24hpl')
+retina36 <- read_excel('/Users/sm2949/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo36hpl')
+retina72 <- read_excel('/Users/sm2949/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo72hpl')
+retina5 <- read_excel('/Users/sm2949/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo5dpl')
+retina10 <- read_excel('/Users/sm2949/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo10dpl')
+retina14 <- read_excel('/Users/sm2949/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo14dpl')
+retina28 <- read_excel('/Users/sm2949/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo28dpl')
+
+# define the filtering function
+filter_significant_genes <- function(df, gene_list) {
+  df <- df[df$FDR < 0.05 & df$log2FC > 1, ]  # filter for significance and logFC, change based on pos or neg
+  df <- df[rownames(df) %in% gene_list, ]  # only bivalent genes
+  return(df)
+}
+
+# define function to convert to ensembl gene name
+convert_to_ensembl <- function(df, conversion){
+  merged_df <- left_join(df, conversion, by = c("...1" = "Zebrafish gene name"))
+  merged_df <- merged_df[c(2:6, 20)]
+  merged_df <- merged_df[!is.na(merged_df$"Zebrafish gene stable ID"), ]
+  merged_df <- as.data.frame(merged_df)
+  merged_df <- merged_df[!duplicated(merged_df$"Zebrafish gene stable ID"), ]
+  rownames(merged_df) <- merged_df[,6]  
+  merged_df <- merged_df[,-6]
+  return(merged_df)
+}
+
+ensembl_retina24 <- convert_to_ensembl(retina24, conversion)
+ensembl_retina36 <- convert_to_ensembl(retina36, conversion)
+ensembl_retina72 <- convert_to_ensembl(retina72, conversion)
+ensembl_retina5 <- convert_to_ensembl(retina5, conversion)
+ensembl_retina10 <- convert_to_ensembl(retina10, conversion)
+ensembl_retina14 <- convert_to_ensembl(retina14, conversion)
+ensembl_retina28 <- convert_to_ensembl(retina28, conversion)
+
+retina24_filtered <- filter_significant_genes(ensembl_retina24, zebrafish_bivalent)
+retina36_filtered <- filter_significant_genes(ensembl_retina36, zebrafish_bivalent)
+retina72_filtered <- filter_significant_genes(ensembl_retina72, zebrafish_bivalent)
+retina5_filtered <- filter_significant_genes(ensembl_retina5, zebrafish_bivalent)
+retina10_filtered <- filter_significant_genes(ensembl_retina10, zebrafish_bivalent)
+retina14_filtered <- filter_significant_genes(ensembl_retina14, zebrafish_bivalent)
+retina28_filtered <- filter_significant_genes(ensembl_retina28, zebrafish_bivalent)
+
+# ---------------------------------- spinal cord injury model ----------------------------------#
+control1 <- read_tsv('/Users/sm2949/Desktop/GSE193502_RAW/GSM5811624_htseq-count.uninjured.rep1.txt', col_names = c("gene", "control.1"))
+control2 <- read_tsv('/Users/sm2949/Desktop/GSE193502_RAW/GSM5811625_htseq-count.uninjured.rep2.txt', col_names = c("gene", "control.2"))
+control3 <- read_tsv('/Users/sm2949/Desktop/GSE193502_RAW/GSM5811626_htseq-count.uninjured.rep3.txt', col_names = c("gene", "control.3"))
+injured1 <- read_tsv('/Users/sm2949/Desktop/GSE193502_RAW/GSM5811627_htseq-count.injured.rep1.txt', col_names = c("gene", "injured.1"))
+injured2 <- read_tsv('/Users/sm2949/Desktop/GSE193502_RAW/GSM5811628_htseq-count.injured.rep2.txt', col_names = c("gene", "injured.2"))
+injured3 <- read_tsv('/Users/sm2949/Desktop/GSE193502_RAW/GSM5811629_htseq-count.injured.rep3.txt', col_names = c("gene", "injured.3"))
+
+# merge the data frames into one
+spine_counts <- control1 %>%
+  full_join(control2, by = "gene") %>%
+  full_join(control3, by = "gene") %>%
+  full_join(injured1, by = "gene") %>%
+  full_join(injured2, by = "gene") %>%
+  full_join(injured3, by = "gene")
+
+# set the gene names as the col names
+spine_counts <- as.data.frame(spine_counts)
+rownames(spine_counts) <- spine_counts[,1]  
+spine_counts <- spine_counts[,-1]
+
+# create the metadata
+spine_samples <- colnames(spine_counts)
+groups_spine <- as.factor(c(
+  ifelse(grepl("control", spine_samples), "control",
+  "injured")))
+
+# create the DGElist object
+y <- DGEList(counts=spine_counts, group=groups_spine)
+# filter out low expressed genes
+keep <- filterByExpr(y)
+y <- y[keep, , keep.lib.sizes=FALSE]
+# create the design model
+design <- model.matrix(~0+groups_spine)
+# normalize the data
+y <- calcNormFactors(y)
+# estimate dispersion
+y <- estimateDisp(y, design)
+colnames(design) <- levels(groups_spine)
+# fit the model
+fit <- glmQLFit(y, design, robust=TRUE)
+
+# fit test
+qlf_timepoint1week <- glmQLFTest(fit, contrast = c(-1, 1))
+
+# save results as a dataframe
+week1 <- as.data.frame(qlf_timepoint1week)
+
+# convert to ensembl
+week1 <- rownames_to_column(week1, var = "row_name")
+ensembl_week1 <- left_join(week1, conversion, by = c("row_name" = "Zebrafish gene name"))
+ensembl_week1 <- ensembl_week1[c(2:5, 7)]
+ensembl_week1 <- ensembl_week1[!is.na(ensembl_week1$"Zebrafish gene stable ID"), ]
+ensembl_week1 <- ensembl_week1[!duplicated(ensembl_week1$"Zebrafish gene stable ID"), ]
+rownames(ensembl_week1) <- ensembl_week1[,5]  
+ensembl_week1 <- ensembl_week1[,-5]
+
+# define the filtering function
+filter_significant_genes <- function(df, gene_list) {
+  df <- df[df$PValue < 0.05 & df$logFC < 1, ]  # filter for significance and logFC, change based on pos or neg
+  df <- df[rownames(df) %in% gene_list, ]  # only bivalent genes
+  return(df)
+}
+
+week1_filtered <- filter_significant_genes(ensembl_week1, zebrafish_bivalent)
+
+# ---------------------------------- ventricular apex injury model ----------------------------------#
+uninjured1 <- read_tsv('/Users/sm2949/Desktop/GSE279653_RAW/GSM8577523_RENWT_Uninj_Rep1.featurecounts.txt', skip = 1)
+uninjured2 <- read_tsv('/Users/sm2949/Desktop/GSE279653_RAW/GSM8577524_RENWT_Uninj_Rep2.featurecounts.txt', skip = 1)
+uninjured3 <- read_tsv('/Users/sm2949/Desktop/GSE279653_RAW/GSM8577525_RENWT_Uninj_Rep3.featurecounts.txt', skip = 1)
+regen1 <- read_tsv('/Users/sm2949/Desktop/GSE279653_RAW/GSM8577526_RENWT_7dpi_Rep1.featurecounts.txt', skip = 1)
+regen2 <- read_tsv('/Users/sm2949/Desktop/GSE279653_RAW/GSM8577527_RENWT_7dpi_Rep2.featurecounts.txt', skip = 1)
+regen3 <- read_tsv('/Users/sm2949/Desktop/GSE279653_RAW/GSM8577528_RENWT_7dpi_Rep3.featurecounts.txt', skip = 1)
+
+clean_up_df <- function(df){
+  colnames(df)[7] <- sub(".*/(.*)\\.sorted\\.bam", "\\1", colnames(df)[7])
+  df <- df[,c(1,7)]
+  return(df)
+}
+
+# clean up the dfs and rename the columns
+uninjured1 <- clean_up_df(uninjured1)
+colnames(uninjured1)[2] <- 'uninjured.1'
+uninjured2 <- clean_up_df(uninjured2)
+colnames(uninjured2)[2] <- 'uninjured.2'
+uninjured3 <- clean_up_df(uninjured3)
+colnames(uninjured3)[2] <- 'uninjured.3'
+regen1 <- clean_up_df(regen1)
+colnames(regen1)[2] <- 'regen.1'
+regen2 <- clean_up_df(regen2)
+colnames(regen2)[2] <- 'regen.2'
+regen3 <- clean_up_df(regen3)
+colnames(regen3)[2] <- 'regen.3'
+
+# merge the data frames into one
+ventricular_counts <- uninjured1 %>%
+  full_join(uninjured2, by = "Geneid") %>%
+  full_join(uninjured3, by = "Geneid") %>%
+  full_join(regen1, by = "Geneid") %>%
+  full_join(regen2, by = "Geneid") %>%
+  full_join(regen3, by = "Geneid")
+
+# set the gene names as the col names
+ventricular_counts <- as.data.frame(ventricular_counts)
+rownames(ventricular_counts) <- ventricular_counts[,1]  
+ventricular_counts <- ventricular_counts[,-1]
+
+# create the metadata
+ventricular_samples <- colnames(ventricular_counts)
+groups_ventricular <- as.factor(c(
+  ifelse(grepl("uninjured", ventricular_samples), "control",
+         "regen")))
+
+# create the DGElist object
+y <- DGEList(counts=ventricular_counts, group=groups_ventricular)
+# filter out low expressed genes
+keep <- filterByExpr(y)
+y <- y[keep, , keep.lib.sizes=FALSE]
+# create the design model
+design <- model.matrix(~0+groups_ventricular)
+# normalize the data
+y <- calcNormFactors(y)
+# estimate dispersion
+y <- estimateDisp(y, design)
+colnames(design) <- levels(groups_ventricular)
+# fit the model
+fit <- glmQLFit(y, design, robust=TRUE)
+
+# fit test
+qlf_timepoint7dpi <- glmQLFTest(fit, contrast = c(-1, 1))
+
+# save results as a dataframe
+dpi7ventricular <- as.data.frame(qlf_timepoint7dpi)
+
+# define the filtering function
+filter_significant_genes <- function(df, gene_list) {
+  df <- df[df$PValue < 0.05 & df$logFC < 1, ]  # filter for significance and logFC, change based on pos or neg
+  df <- df[rownames(df) %in% gene_list, ]  # only bivalent genes
+  return(df)
+}
+
+dpi7_filtered <- filter_significant_genes(dpi7ventricular, zebrafish_bivalent)
+
+writeLines(rownames(dpi7_filtered), "/Users/sm2949/Desktop/gene_ids.txt")
