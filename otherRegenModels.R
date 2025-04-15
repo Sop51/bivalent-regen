@@ -406,12 +406,12 @@ retina14_filtered <- filter_significant_genes(ensembl_retina14, zebrafish_bivale
 retina28_filtered <- filter_significant_genes(ensembl_retina28, zebrafish_bivalent)
 
 # ---------------------------------- spinal cord injury model ----------------------------------#
-control1 <- read_tsv('/Users/sophiemarcotte/Desktop/GSE193502_RAW/GSM5811624_htseq-count.uninjured.rep1.txt', col_names = c("gene", "control.1"))
-control2 <- read_tsv('/Users/sophiemarcotte/Desktop/GSE193502_RAW/GSM5811625_htseq-count.uninjured.rep2.txt', col_names = c("gene", "control.2"))
-control3 <- read_tsv('/Users/sophiemarcotte/Desktop/GSE193502_RAW/GSM5811626_htseq-count.uninjured.rep3.txt', col_names = c("gene", "control.3"))
-injured1 <- read_tsv('/Users/sophiemarcotte/Desktop/GSE193502_RAW/GSM5811627_htseq-count.injured.rep1.txt', col_names = c("gene", "injured.1"))
-injured2 <- read_tsv('/Users/sophiemarcotte/Desktop/GSE193502_RAW/GSM5811628_htseq-count.injured.rep2.txt', col_names = c("gene", "injured.2"))
-injured3 <- read_tsv('/Users/sophiemarcotte/Desktop/GSE193502_RAW/GSM5811629_htseq-count.injured.rep3.txt', col_names = c("gene", "injured.3"))
+control1 <- read_tsv('/Users/sm2949/Desktop/GSE193502_RAW/GSM5811624_htseq-count.uninjured.rep1.txt', col_names = c("gene", "control.1"))
+control2 <- read_tsv('/Users/sm2949/Desktop/GSE193502_RAW/GSM5811625_htseq-count.uninjured.rep2.txt', col_names = c("gene", "control.2"))
+control3 <- read_tsv('/Users/sm2949/Desktop/GSE193502_RAW/GSM5811626_htseq-count.uninjured.rep3.txt', col_names = c("gene", "control.3"))
+injured1 <- read_tsv('/Users/sm2949/Desktop/GSE193502_RAW/GSM5811627_htseq-count.injured.rep1.txt', col_names = c("gene", "injured.1"))
+injured2 <- read_tsv('/Users/sm2949/Desktop/GSE193502_RAW/GSM5811628_htseq-count.injured.rep2.txt', col_names = c("gene", "injured.2"))
+injured3 <- read_tsv('/Users/sm2949/Desktop/GSE193502_RAW/GSM5811629_htseq-count.injured.rep3.txt', col_names = c("gene", "injured.3"))
 
 # merge the data frames into one
 spine_counts <- control1 %>%
@@ -455,29 +455,29 @@ week1 <- as.data.frame(qlf_timepoint1week)
 
 # convert to ensembl
 week1 <- rownames_to_column(week1, var = "row_name")
-ensembl_week1 <- left_join(week1, onlyZeb_conversion, by = c("row_name" = "Gene name"))
-ensembl_week1 <- ensembl_week1[,c(2:6)]
-ensembl_week1 <- ensembl_week1[!is.na(ensembl_week1$"Gene stable ID"), ]
-ensembl_week1 <- ensembl_week1[!duplicated(ensembl_week1$"Gene stable ID"), ]
+ensembl_week1 <- left_join(week1, conversion, by = c("row_name" = "Zebrafish gene name"))
+ensembl_week1 <- ensembl_week1[,c(2:5, 7)]
+ensembl_week1 <- ensembl_week1[!is.na(ensembl_week1$"Zebrafish gene stable ID"), ]
+ensembl_week1 <- ensembl_week1[!duplicated(ensembl_week1$"Zebrafish gene stable ID"), ]
 rownames(ensembl_week1) <- ensembl_week1[,5]  
 ensembl_week1 <- ensembl_week1[,-5]
 
 # define the filtering function
 filter_significant_genes <- function(df, gene_list) {
   df <- df[df$PValue < 0.05 & df$logFC < 1, ]  # filter for significance and logFC, change based on pos or neg
-  #df <- df[rownames(df) %in% gene_list, ]  # only bivalent genes
+  df <- df[rownames(df) %in% gene_list, ]  # only bivalent genes
   return(df)
 }
 
 week1_filtered <- filter_significant_genes(ensembl_week1, zebrafish_bivalent)
 
 # ---------------------------------- ventricular apex injury model ----------------------------------#
-uninjured1 <- read_tsv('/Users/sophiemarcotte/Desktop/GSE279653_RAW/GSM8577523_RENWT_Uninj_Rep1.featurecounts.txt', skip = 1)
-uninjured2 <- read_tsv('/Users/sophiemarcotte/Desktop/GSE279653_RAW/GSM8577524_RENWT_Uninj_Rep2.featurecounts.txt', skip = 1)
-uninjured3 <- read_tsv('/Users/sophiemarcotte/Desktop/GSE279653_RAW/GSM8577525_RENWT_Uninj_Rep3.featurecounts.txt', skip = 1)
-regen1 <- read_tsv('/Users/sophiemarcotte/Desktop/GSE279653_RAW/GSM8577526_RENWT_7dpi_Rep1.featurecounts.txt', skip = 1)
-regen2 <- read_tsv('/Users/sophiemarcotte/Desktop/GSE279653_RAW/GSM8577527_RENWT_7dpi_Rep2.featurecounts.txt', skip = 1)
-regen3 <- read_tsv('/Users/sophiemarcotte/Desktop/GSE279653_RAW/GSM8577528_RENWT_7dpi_Rep3.featurecounts.txt', skip = 1)
+uninjured1 <- read_tsv('/Users/sm2949/Desktop/GSE279653_RAW/GSM8577523_RENWT_Uninj_Rep1.featurecounts.txt', skip = 1)
+uninjured2 <- read_tsv('/Users/sm2949/Desktop/GSE279653_RAW/GSM8577524_RENWT_Uninj_Rep2.featurecounts.txt', skip = 1)
+uninjured3 <- read_tsv('/Users/sm2949/Desktop/GSE279653_RAW/GSM8577525_RENWT_Uninj_Rep3.featurecounts.txt', skip = 1)
+regen1 <- read_tsv('/Users/sm2949/Desktop/GSE279653_RAW/GSM8577526_RENWT_7dpi_Rep1.featurecounts.txt', skip = 1)
+regen2 <- read_tsv('/Users/sm2949/Desktop/GSE279653_RAW/GSM8577527_RENWT_7dpi_Rep2.featurecounts.txt', skip = 1)
+regen3 <- read_tsv('/Users/sm2949/Desktop/GSE279653_RAW/GSM8577528_RENWT_7dpi_Rep3.featurecounts.txt', skip = 1)
 
 clean_up_df <- function(df){
   colnames(df)[7] <- sub(".*/(.*)\\.sorted\\.bam", "\\1", colnames(df)[7])
@@ -542,7 +542,7 @@ dpi7ventricular <- as.data.frame(qlf_timepoint7dpi)
 # define the filtering function
 filter_significant_genes <- function(df, gene_list) {
   df <- df[df$PValue < 0.05 & df$logFC < 1, ]  # filter for significance and logFC, change based on pos or neg
-  #df <- df[rownames(df) %in% gene_list, ]  # only bivalent genes
+  df <- df[rownames(df) %in% gene_list, ]  # only bivalent genes
   return(df)
 }
 
@@ -550,12 +550,3 @@ dpi7_filtered <- filter_significant_genes(dpi7ventricular, zebrafish_bivalent)
 
 writeLines(q3_filtered$...1, "/Users/sophiemarcotte/Desktop/gene_ids.txt")
 
-
-# temporary
-q1 <- read_csv("/Users/sophiemarcotte/Desktop/qlf_timepoint1.csv")
-q2 <- read_csv("/Users/sophiemarcotte/Desktop/qlf_timepoint2.csv")
-q3 <- read_csv("/Users/sophiemarcotte/Desktop/qlf_timepoint3.csv")
-
-q1_filtered <- filter_significant_genes(q1, zebrafish_bivalent)
-q2_filtered <- filter_significant_genes(q2, zebrafish_bivalent)
-q3_filtered <- filter_significant_genes(q3, zebrafish_bivalent)

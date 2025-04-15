@@ -20,8 +20,10 @@ go_bp <- function(entrez_ids){
                         pAdjustMethod = "BH",
                         pvalueCutoff = 0.05,
                         readable = TRUE)
-  go_df <- go_enrich@result
-  return(go_df)
+  # create a barplot or dotplot
+  go_plot <- dotplot(go_enrich, showCategory = 10, font.size = 10) 
+  # return both result and plot
+  return(list(results = go_enrich@result, plot = go_plot))
 }
 
 # run kegg 
@@ -29,8 +31,11 @@ run_kegg <- function(entriz_ids){
   kegg_enrich <- enrichKEGG(gene = entriz_ids$ENTREZID,
                             organism = 'dre',  
                             pvalueCutoff = 0.05)
-  kegg_df <- kegg_enrich@result
-  return(kegg_df)
+  kegg_enrich <- setReadable(kegg_enrich, OrgDb = org.Dr.eg.db, keyType = "ENTREZID")
+  # create a plot
+  kegg_plot <- dotplot(kegg_enrich, showCategory = 20, font.size = 10) + ggtitle("KEGG Pathways")
+  # return both result and plot
+  return(list(results = kegg_enrich@result, plot = kegg_plot))
 }
 
 # get gene symbols from kegg results for a pathway
@@ -49,15 +54,32 @@ get_symbols_from_description <- function(df, description) {
 }
 
 # all injury up
-injury_entrez_up <- convert_to_entrez(injury_up_genes)
+injury_entrez_up <- convert_to_entrez(up_genes_least_3)
 injury_go_up <- go_bp(injury_entrez_up)
+injury_go_up$plot # none significant
 injury_kegg_up <- run_kegg(injury_entrez_up)
+injury_kegg_up$plot # p53 pathway
 
 # all injury down
+injury_entrez_down <- convert_to_entrez(down_genes_least_3)
+injury_go_down <- go_bp(injury_entrez_down)
+injury_go_down$plot
+injury_kegg_down <- run_kegg(injury_entrez_down)
+injury_kegg_down$plot
 
 # all organ up
+organ_entrez_up <- convert_to_entrez(up_organ_genes_least_3)
+organ_go_up <- go_bp(organ_entrez_up)
+organ_go_up$plot 
+organ_kegg_up <- run_kegg(organ_entrez_up)
+organ_kegg_up$plot # none
 
 # all organ down
+organ_entrez_down <- convert_to_entrez(down_organ_genes_least_3)
+organ_go_down <- go_bp(organ_entrez_down)
+organ_go_down$plot 
+organ_kegg_down <- run_kegg(organ_entrez_down)
+organ_kegg_down$plot # none
 
 # cryo injury ----
 # up
@@ -149,54 +171,4 @@ spinal_cord_kegg_up <- run_kegg(spinal_cord_entrez_up)
 spinal_cord_entrez_down <- convert_to_entrez(spinal_cord_down)
 spinal_cord_go_down <- go_bp(spinal_cord_entrez_down)
 spinal_cord_kegg_down <- run_kegg(spinal_cord_entrez_down)
-
-# overlapping kegg terms
-overlap_up_kegg <- Reduce(intersect, list(mtz_kegg_up$Description, apap_kegg_up$Description, 
-                                          phx_kegg_up$Description, cryo_kegg_up$Description,
-                                          heart_valve_kegg_up$Description, caudal_fin_kegg_up$Description,
-                                          retina_kegg_up$Description, spinal_cord_kegg_up$Description,
-                                          ventricular_apex_kegg_up$Description))
-
-
-# looking at pathway genes from the overlapping pathways
-# apelin signaling pathway
-apelin_signaling_pathway_cryo <- get_symbols_from_description(cryo_kegg_up, "Apelin signaling pathway")
-apelin_signaling_pathway_apap <- get_symbols_from_description(apap_kegg_up, "Apelin signaling pathway")
-apelin_signaling_pathway_phx <- get_symbols_from_description(phx_kegg_up, "Apelin signaling pathway")
-apelin_signaling_pathway_mtz <- get_symbols_from_description(mtz_kegg_up, "Apelin signaling pathway")
-# combine
-apelin_signaling_combined <- unique(c(
-  apelin_signaling_pathway_cryo,
-  apelin_signaling_pathway_apap,
-  apelin_signaling_pathway_phx,
-  apelin_signaling_pathway_mtz
-))
-
-# ecm-receptor interaction
-ecm_receptor_interaction_cryo <- get_symbols_from_description(cryo_kegg_up, "ECM-receptor interaction")
-ecm_receptor_interaction_apap <- get_symbols_from_description(apap_kegg_up, "ECM-receptor interaction")
-ecm_receptor_interaction_phx <- get_symbols_from_description(phx_kegg_up, "ECM-receptor interaction")
-ecm_receptor_interaction_mtz <- get_symbols_from_description(mtz_kegg_up, "ECM-receptor interaction")
-# combine
-ecm_receptor_combined <- unique(c(
-  ecm_receptor_interaction_cryo,
-  ecm_receptor_interaction_apap,
-  ecm_receptor_interaction_phx,
-  ecm_receptor_interaction_mtz
-))
-
-# salmonella infection
-salmonella_infection_cryo <- get_symbols_from_description(cryo_kegg_up, "Salmonella infection")
-salmonella_infection_apap <- get_symbols_from_description(apap_kegg_up, "Salmonella infection")
-salmonella_infection_phx <- get_symbols_from_description(phx_kegg_up, "Salmonella infection")
-salmonella_infection_mtz <- get_symbols_from_description(mtz_kegg_up, "Salmonella infection")
-# combine
-salmonella_combined <- unique(c(
-  salmonella_infection_cryo,
-  salmonella_infection_apap,
-  salmonella_infection_phx,
-  salmonella_infection_mtz
-))
-
-
 
