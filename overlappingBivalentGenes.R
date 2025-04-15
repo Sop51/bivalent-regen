@@ -5,15 +5,15 @@ library(clusterProfiler)
 library(org.Dr.eg.db)
 
 # read in all data sets for different injury models
-cryoinjury <- read_excel('/Users/sophiemarcotte/Desktop/BivalentRegen.xlsx', sheet = 'Cryoinjury')
-apap <- read_excel('/Users/sophiemarcotte/Desktop/BivalentRegen.xlsx', sheet = 'APAP')
-phx <- read_excel('/Users/sophiemarcotte/Desktop/BivalentRegen.xlsx', sheet = 'PHx')
-mtz <- read_excel('/Users/sophiemarcotte/Desktop/BivalentRegen.xlsx', sheet = 'Mtz')
-heart_valve <- read_excel('/Users/sophiemarcotte/Desktop/BivalentRegen.xlsx', sheet = 'Heart Valve')
-caudal_fin <- read_excel('/Users/sophiemarcotte/Desktop/BivalentRegen.xlsx', sheet = 'Caudal Fin')
-retina <- read_excel('/Users/sophiemarcotte/Desktop/BivalentRegen.xlsx', sheet = 'Retina')
-spinal_cord <- read_excel('/Users/sophiemarcotte/Desktop/BivalentRegen.xlsx', sheet = 'Spinal Cord')
-ventricular_apex <- read_excel('/Users/sophiemarcotte/Desktop/BivalentRegen.xlsx', sheet = 'Ventricular Apex')
+cryoinjury <- read_excel('/Users/sm2949/Desktop/BivalentRegen.xlsx', sheet = 'Cryoinjury')
+apap <- read_excel('/Users/sm2949/Desktop/BivalentRegen.xlsx', sheet = 'APAP')
+phx <- read_excel('/Users/sm2949/Desktop/BivalentRegen.xlsx', sheet = 'PHx')
+mtz <- read_excel('/Users/sm2949/Desktop/BivalentRegen.xlsx', sheet = 'Mtz')
+heart_valve <- read_excel('/Users/sm2949/Desktop/BivalentRegen.xlsx', sheet = 'Heart Valve')
+caudal_fin <- read_excel('/Users/sm2949/Desktop/BivalentRegen.xlsx', sheet = 'Caudal Fin')
+retina <- read_excel('/Users/sm2949/Desktop/BivalentRegen.xlsx', sheet = 'Retina')
+spinal_cord <- read_excel('/Users/sm2949/Desktop/BivalentRegen.xlsx', sheet = 'Spinal Cord')
+ventricular_apex <- read_excel('/Users/sm2949/Desktop/BivalentRegen.xlsx', sheet = 'Ventricular Apex')
 
 # different injury models DOWN ----
 # define a function to pull out the down regulated genes from all time points
@@ -36,8 +36,22 @@ apap_down <- pull_out_down_genes(apap)
 phx_down <- pull_out_down_genes(phx)
 mtz_down <- pull_out_down_genes(mtz)
 
-# overlap the lists to get the final lists
+# overlap the lists to get the final lists of ones in ALL lists
 overlap_down_genes <- Reduce(intersect, list(cryoinjury_down, apap_down, phx_down, mtz_down))
+
+# overlap lists to get genes in at least 3 of the models 
+unique_down_lists <- list(
+  unique(cryoinjury_down),
+  unique(apap_down),
+  unique(phx_down),
+  unique(mtz_down)
+)
+# combine all deduplicated genes into one vector
+all_down_genes <- unlist(unique_down_lists)
+# count how many times each gene appears
+down_gene_counts <- table(all_down_genes)
+# get genes that appear in at least 3 models
+down_genes_least_3 <- names(down_gene_counts[down_gene_counts >= 3])
 
 # different injury models UP ----
 # define a function to pull out the up regulated genes from all time points
@@ -63,14 +77,19 @@ mtz_up <- pull_out_up_genes(mtz)
 # overlap the lists to get the final lists
 overlap_up_genes <- Reduce(intersect, list(cryoinjury_up, apap_up, phx_up, mtz_up))
 
-# convert to dataframes
-up_df <- as.data.frame(overlap_up_genes)
-down_df <- as.data.frame(overlap_down_genes)
-
-# combine both lists with gene symbols
-symbol_up <- left_join(up_df, conversion, by = c('overlap_up_genes' = 'Zebrafish gene stable ID'))
-symbol_down <- left_join(down_df, conversion, by = c('overlap_down_genes' = 'Zebrafish gene stable ID'))
-symbol_down <- symbol_down[!duplicated(symbol_down$overlap_down_genes), ]
+# overlap lists to get genes in at least 3 of the models 
+unique_up_lists <- list(
+  unique(cryoinjury_up),
+  unique(apap_up),
+  unique(phx_up),
+  unique(mtz_up)
+)
+# combine all deduplicated genes into one vector
+all_up_genes <- unlist(unique_up_lists)
+# count how many times each gene appears
+up_gene_counts <- table(all_up_genes)
+# get genes that appear in at least 3 models
+up_genes_least_3 <- names(up_gene_counts[up_gene_counts >= 3])
 
 # different organ models DOWN ----
 # run the functions on all organ models
@@ -83,6 +102,21 @@ ventricular_apex_down <- pull_out_down_genes(ventricular_apex)
 # overlap the lists to get the final lists
 organ_down_genes <- Reduce(intersect, list(heart_valve_down, caudal_fin_down, retina_down, spinal_cord_down, ventricular_apex_down))
 
+# overlap lists to get genes in at least 3 of the models 
+unique_down_organ_lists <- list(
+  unique(heart_valve_down),
+  unique(caudal_fin_down),
+  unique(retina_down),
+  unique(spinal_cord_down),
+  unique(ventricular_apex_down)
+)
+# combine all deddownlicated genes into one vector
+all_down_organ_genes <- unlist(unique_down_organ_lists)
+# count how many times each gene appears
+down_organ_gene_counts <- table(all_down_organ_genes)
+# get genes that appear in at least 3 models
+down_organ_genes_least_3 <- names(down_organ_gene_counts[down_organ_gene_counts >= 3])
+
 # different organ models UP ----
 # run the functions on all organ models
 heart_valve_up <- pull_out_up_genes(heart_valve)
@@ -94,8 +128,17 @@ ventricular_apex_up <- pull_out_up_genes(ventricular_apex)
 # overlap the lists to get the final lists
 organ_up_genes <- Reduce(intersect, list(heart_valve_up, caudal_fin_up, retina_up, spinal_cord_up, ventricular_apex_up))
 
-down_organ_df <- as.data.frame(organ_down_genes)
-
-# combine both lists with gene symbols
-symbol_down_organ <- left_join(down_organ_df, conversion, by = c('organ_down_genes' = 'Zebrafish gene stable ID'))
-
+# overlap lists to get genes in at least 3 of the models 
+unique_up_organ_lists <- list(
+  unique(heart_valve_up),
+  unique(caudal_fin_up),
+  unique(retina_up),
+  unique(spinal_cord_up),
+  unique(ventricular_apex_up)
+)
+# combine all deduplicated genes into one vector
+all_up_organ_genes <- unlist(unique_up_organ_lists)
+# count how many times each gene appears
+up_organ_gene_counts <- table(all_up_organ_genes)
+# get genes that appear in at least 3 models
+up_organ_genes_least_3 <- names(up_organ_gene_counts[up_organ_gene_counts >= 3])

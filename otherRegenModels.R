@@ -7,9 +7,9 @@ library(tibble)
 
 
 # read in the list of bivalent mice genes
-bivalent_mice_genes <- read_csv('/Users/sophiemarcotte/Desktop/unique_ensembl_bivalent.csv')
+bivalent_mice_genes <- read_csv('/Users/sm2949/Desktop/unique_ensembl_bivalent.csv')
 # read in the conversion file
-conversion <- read_tsv('/Users/sophiemarcotte/Desktop/mart_export.txt')
+conversion <- read_tsv('/Users/sm2949/Desktop/mart_export.txt')
 onlyZeb_conversion <- read_csv('/Users/sophiemarcotte/Desktop/mart_export copy.txt')
 
 # join the tables together to map orthologs
@@ -260,7 +260,7 @@ phx120_filtered <- filter_significant_genes(phx120, zebrafish_bivalent)
 phx168_filtered <- filter_significant_genes(phx168, zebrafish_bivalent)
 
 # ---------------------------------- heart valve injury model ----------------------------------#
-heart_counts <- read_tsv("/Users/sophiemarcotte/Desktop/GSE136786_matrix.txt")
+heart_counts <- read_tsv("/Users/sm2949/Desktop/GSE136786_matrix.txt")
 heart_filtered <- heart_counts[,c(1,5:13)]
 
 # set the gene names as the col names
@@ -299,8 +299,8 @@ heart48 <- as.data.frame(qlf_timepoint48)
 
 # define the filtering function
 filter_significant_genes <- function(df, gene_list) {
-  df <- df[df$PValue < 0.05 & df$logFC < 1, ]  # filter for significance and logFC
-  #df <- df[rownames(df) %in% gene_list, ]  # only bivalent genes
+  df <- df[df$PValue < 0.05 & df$logFC > 1, ]  # filter for significance and logFC
+  df <- df[rownames(df) %in% gene_list, ]  # only bivalent genes
   return(df)
 }
 
@@ -309,7 +309,7 @@ heart21_filtered <- filter_significant_genes(heart21, zebrafish_bivalent)
 heart48_filtered <- filter_significant_genes(heart48, zebrafish_bivalent)
 
 # ---------------------------------- caudal fin injury model ----------------------------------#
-fin_counts <- read_excel("/Users/sophiemarcotte/Desktop/GSE112498_counts_raw_pnauroy.xlsx")
+fin_counts <- read_excel("/Users/sm2949/Desktop/GSE112498_counts_raw_pnauroy.xlsx")
 
 # set the gene names as the col names
 fin_countData <- as.data.frame(fin_counts)
@@ -352,7 +352,7 @@ fin10 <- as.data.frame(qlf_timepoint10)
 # define the filtering function
 filter_significant_genes <- function(df, gene_list) {
   df <- df[df$PValue < 0.05 & df$logFC < 1, ]  # filter for significance and logFC, change based on pos or neg
-  #df <- df[rownames(df) %in% gene_list, ]  # only bivalent genes
+  df <- df[rownames(df) %in% gene_list, ]  # only bivalent genes
   return(df)
 }
 
@@ -362,40 +362,40 @@ fin3_filtered <- filter_significant_genes(fin3, zebrafish_bivalent)
 fin10_filtered <- filter_significant_genes(fin10, zebrafish_bivalent)
 
 # ---------------------------------- retina injury model ----------------------------------#
-retina24 <- read_excel('/Users/sophiemarcotte/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo24hpl')
-retina36 <- read_excel('/Users/sophiemarcotte/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo36hpl')
-retina72 <- read_excel('/Users/sophiemarcotte/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo72hpl')
-retina5 <- read_excel('/Users/sophiemarcotte/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo5dpl')
-retina10 <- read_excel('/Users/sophiemarcotte/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo10dpl')
-retina14 <- read_excel('/Users/sophiemarcotte/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo14dpl')
-retina28 <- read_excel('/Users/sophiemarcotte/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo28dpl')
+retina24 <- read_excel('/Users/sm2949/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo24hpl')
+retina36 <- read_excel('/Users/sm2949/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo36hpl')
+retina72 <- read_excel('/Users/sm2949/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo72hpl')
+retina5 <- read_excel('/Users/sm2949/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo5dpl')
+retina10 <- read_excel('/Users/sm2949/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo10dpl')
+retina14 <- read_excel('/Users/sm2949/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo14dpl')
+retina28 <- read_excel('/Users/sm2949/Desktop/GSE180518_Table-1_Kramer_2021.xlsx', sheet = 'Pairwise_CtrlTo28dpl')
 
 # define the filtering function
 filter_significant_genes <- function(df, gene_list) {
   df <- df[df$FDR < 0.05 & df$log2FC < 1, ]  # filter for significance and logFC, change based on pos or neg
-  #df <- df[rownames(df) %in% gene_list, ]  # only bivalent genes
+  df <- df[rownames(df) %in% gene_list, ]  # only bivalent genes
   return(df)
 }
 
 # define function to convert to ensembl gene name
 convert_to_ensembl <- function(df, conversion){
-  merged_df <- left_join(df, conversion, by = c("...1" = "Gene name"))
-  merged_df <- merged_df[c(2:6, 19)]
-  merged_df <- merged_df[!is.na(merged_df$"Gene stable ID"), ]
+  merged_df <- left_join(df, conversion, by = c("...1" = "Zebrafish gene name"))
+  merged_df <- merged_df[c(2:6, 20)]
+  merged_df <- merged_df[!is.na(merged_df$"Zebrafish gene stable ID"), ]
   merged_df <- as.data.frame(merged_df)
-  merged_df <- merged_df[!duplicated(merged_df$"Gene stable ID"), ]
+  merged_df <- merged_df[!duplicated(merged_df$"Zebrafish gene stable ID"), ]
   rownames(merged_df) <- merged_df[,6]  
   merged_df <- merged_df[,-6]
   return(merged_df)
 }
 
-ensembl_retina24 <- convert_to_ensembl(retina24, onlyZeb_conversion)
-ensembl_retina36 <- convert_to_ensembl(retina36, onlyZeb_conversion)
-ensembl_retina72 <- convert_to_ensembl(retina72, onlyZeb_conversion)
-ensembl_retina5 <- convert_to_ensembl(retina5, onlyZeb_conversion)
-ensembl_retina10 <- convert_to_ensembl(retina10, onlyZeb_conversion)
-ensembl_retina14 <- convert_to_ensembl(retina14, onlyZeb_conversion)
-ensembl_retina28 <- convert_to_ensembl(retina28, onlyZeb_conversion)
+ensembl_retina24 <- convert_to_ensembl(retina24, conversion)
+ensembl_retina36 <- convert_to_ensembl(retina36, conversion)
+ensembl_retina72 <- convert_to_ensembl(retina72, conversion)
+ensembl_retina5 <- convert_to_ensembl(retina5, conversion)
+ensembl_retina10 <- convert_to_ensembl(retina10, conversion)
+ensembl_retina14 <- convert_to_ensembl(retina14, conversion)
+ensembl_retina28 <- convert_to_ensembl(retina28, conversion)
 
 retina24_filtered <- filter_significant_genes(ensembl_retina24, zebrafish_bivalent)
 retina36_filtered <- filter_significant_genes(ensembl_retina36, zebrafish_bivalent)
