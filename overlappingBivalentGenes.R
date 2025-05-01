@@ -53,6 +53,9 @@ down_gene_counts <- table(all_down_genes)
 # get genes that appear in at least 3 models
 down_genes_least_3 <- names(down_gene_counts[down_gene_counts >= 3])
 
+# save list
+writeLines(down_genes_least_3, "/Users/sm2949/Desktop/acrossInjuryDownGenes.txt")
+
 # different injury models UP ----
 # define a function to pull out the up regulated genes from all time points
 pull_out_up_genes <- function(df){
@@ -74,8 +77,12 @@ apap_up <- pull_out_up_genes(apap)
 phx_up <- pull_out_up_genes(phx)
 mtz_up <- pull_out_up_genes(mtz)
 
-# overlap the lists to get the final lists
-overlap_up_genes <- Reduce(intersect, list(cryoinjury_up, apap_up, phx_up, mtz_up))
+# overlap the lists to get the final lists of ONLY phx and mtz
+overlap_up_genes <- Reduce(intersect, list(phx_up, mtz_up))
+overlap_up_unique <- unique(overlap_up_genes)
+# save list of ONLY phx and mtz overalps
+writeLines(overlap_up_unique, "/Users/sm2949/Desktop/MtzPhxUpGenes.txt")
+
 
 # overlap lists to get genes in at least 3 of the models 
 unique_up_lists <- list(
@@ -90,6 +97,9 @@ all_up_genes <- unlist(unique_up_lists)
 up_gene_counts <- table(all_up_genes)
 # get genes that appear in at least 3 models
 up_genes_least_3 <- names(up_gene_counts[up_gene_counts >= 3])
+
+# save list
+writeLines(up_genes_least_3, "/Users/sm2949/Desktop/acrossInjuryUpGenes.txt")
 
 # different organ models DOWN ----
 # run the functions on all organ models
@@ -117,6 +127,9 @@ down_organ_gene_counts <- table(all_down_organ_genes)
 # get genes that appear in at least 3 models
 down_organ_genes_least_3 <- names(down_organ_gene_counts[down_organ_gene_counts >= 3])
 
+# save list
+writeLines(down_organ_genes_least_3, "/Users/sm2949/Desktop/acrossOrganDownGenes.txt")
+
 # different organ models UP ----
 # run the functions on all organ models
 heart_valve_up <- pull_out_up_genes(heart_valve)
@@ -142,3 +155,6 @@ all_up_organ_genes <- unlist(unique_up_organ_lists)
 up_organ_gene_counts <- table(all_up_organ_genes)
 # get genes that appear in at least 3 models
 up_organ_genes_least_3 <- names(up_organ_gene_counts[up_organ_gene_counts >= 3])
+
+# save list
+writeLines(up_organ_genes_least_3, "/Users/sm2949/Desktop/acrossOrganUpGenes.txt")
