@@ -5,15 +5,15 @@ library(clusterProfiler)
 library(org.Dr.eg.db)
 
 # read in all data sets for different injury models
-cryoinjury <- read_excel('/Users/sm2949/Desktop/BivalentRegen.xlsx', sheet = 'Cryoinjury')
-apap <- read_excel('/Users/sm2949/Desktop/BivalentRegen.xlsx', sheet = 'APAP')
-phx <- read_excel('/Users/sm2949/Desktop/BivalentRegen.xlsx', sheet = 'PHx')
-mtz <- read_excel('/Users/sm2949/Desktop/BivalentRegen.xlsx', sheet = 'Mtz')
-heart_valve <- read_excel('/Users/sm2949/Desktop/BivalentRegen.xlsx', sheet = 'Heart Valve')
-caudal_fin <- read_excel('/Users/sm2949/Desktop/BivalentRegen.xlsx', sheet = 'Caudal Fin')
-retina <- read_excel('/Users/sm2949/Desktop/BivalentRegen.xlsx', sheet = 'Retina')
-spinal_cord <- read_excel('/Users/sm2949/Desktop/BivalentRegen.xlsx', sheet = 'Spinal Cord')
-ventricular_apex <- read_excel('/Users/sm2949/Desktop/BivalentRegen.xlsx', sheet = 'Ventricular Apex')
+cryoinjury <- read_excel('/Users/sophiemarcotte/Desktop/BivalentRegen.xlsx', sheet = 'Cryoinjury')
+apap <- read_excel('/Users/sophiemarcotte/Desktop/BivalentRegen.xlsx', sheet = 'APAP')
+phx <- read_excel('/Users/sophiemarcotte/Desktop/BivalentRegen.xlsx', sheet = 'PHx')
+mtz <- read_excel('/Users/sophiemarcotte/Desktop/BivalentRegen.xlsx', sheet = 'Mtz')
+heart_valve <- read_excel('/Users/sophiemarcotte/Desktop/BivalentRegen.xlsx', sheet = 'Heart Valve')
+caudal_fin <- read_excel('/Users/sophiemarcotte/Desktop/BivalentRegen.xlsx', sheet = 'Caudal Fin')
+retina <- read_excel('/Users/sophiemarcotte/Desktop/BivalentRegen.xlsx', sheet = 'Retina')
+spinal_cord <- read_excel('/Users/sophiemarcotte/Desktop/BivalentRegen.xlsx', sheet = 'Spinal Cord')
+ventricular_apex <- read_excel('/Users/sophiemarcotte/Desktop/BivalentRegen.xlsx', sheet = 'Ventricular Apex')
 
 # different injury models DOWN ----
 # define a function to pull out the down regulated genes from all time points
@@ -36,6 +36,12 @@ apap_down <- pull_out_down_genes(apap)
 phx_down <- pull_out_down_genes(phx)
 mtz_down <- pull_out_down_genes(mtz)
 
+# overlap the lists to get the final lists of ONLY phx and mtz
+overlap_down_genes <- Reduce(intersect, list(phx_down, mtz_down))
+overlap_down_unique <- unique(overlap_down_genes)
+# save list of ONLY phx and mtz overalps
+writeLines(overlap_down_unique, "/Users/sophiemarcotte/Desktop/MtzPhxDownGenes.txt")
+
 # overlap the lists to get the final lists of ones in ALL lists
 overlap_down_genes <- Reduce(intersect, list(cryoinjury_down, apap_down, phx_down, mtz_down))
 
@@ -44,14 +50,19 @@ unique_down_lists <- list(
   unique(cryoinjury_down),
   unique(apap_down),
   unique(phx_down),
-  unique(mtz_down)
+  unique(mtz_down),
+  unique(heart_valve_down),
+  unique(caudal_fin_down),
+  unique(retina_down),
+  unique(spinal_cord_down),
+  unique(ventricular_apex_down)
 )
 # combine all deduplicated genes into one vector
 all_down_genes <- unlist(unique_down_lists)
 # count how many times each gene appears
 down_gene_counts <- table(all_down_genes)
 # get genes that appear in at least 3 models
-down_genes_least_3 <- names(down_gene_counts[down_gene_counts >= 3])
+down_genes_least_3 <- names(down_gene_counts[down_gene_counts >= 8])
 
 # save list
 writeLines(down_genes_least_3, "/Users/sm2949/Desktop/acrossInjuryDownGenes.txt")
@@ -89,14 +100,14 @@ unique_up_lists <- list(
   unique(cryoinjury_up),
   unique(apap_up),
   unique(phx_up),
-  unique(mtz_up)
+  unique(mtz_up),
 )
 # combine all deduplicated genes into one vector
 all_up_genes <- unlist(unique_up_lists)
 # count how many times each gene appears
 up_gene_counts <- table(all_up_genes)
 # get genes that appear in at least 3 models
-up_genes_least_3 <- names(up_gene_counts[up_gene_counts >= 3])
+up_genes_least_3 <- names(up_gene_counts[up_gene_counts >= 7])
 
 # save list
 writeLines(up_genes_least_3, "/Users/sm2949/Desktop/acrossInjuryUpGenes.txt")
@@ -125,7 +136,7 @@ all_down_organ_genes <- unlist(unique_down_organ_lists)
 # count how many times each gene appears
 down_organ_gene_counts <- table(all_down_organ_genes)
 # get genes that appear in at least 3 models
-down_organ_genes_least_3 <- names(down_organ_gene_counts[down_organ_gene_counts >= 3])
+down_organ_genes_least_3 <- names(down_organ_gene_counts[down_organ_gene_counts >= 5])
 
 # save list
 writeLines(down_organ_genes_least_3, "/Users/sm2949/Desktop/acrossOrganDownGenes.txt")
@@ -154,7 +165,7 @@ all_up_organ_genes <- unlist(unique_up_organ_lists)
 # count how many times each gene appears
 up_organ_gene_counts <- table(all_up_organ_genes)
 # get genes that appear in at least 3 models
-up_organ_genes_least_3 <- names(up_organ_gene_counts[up_organ_gene_counts >= 3])
+up_organ_genes_least_3 <- names(up_organ_gene_counts[up_organ_gene_counts >= 4])
 
 # save list
 writeLines(up_organ_genes_least_3, "/Users/sm2949/Desktop/acrossOrganUpGenes.txt")
